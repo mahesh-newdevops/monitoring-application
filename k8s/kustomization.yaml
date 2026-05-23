@@ -9,6 +9,9 @@ resources:
   - loki/configmap.yaml
   - loki/deployment.yaml
   - loki/service.yaml
+  - tempo/configmap.yaml
+  - tempo/deployment.yaml
+  - tempo/service.yaml
   - grafana/datasources.yaml
   - grafana/deployment.yaml
   - grafana/service.yaml

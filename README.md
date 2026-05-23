@@ -5,7 +5,9 @@ Minikube-friendly Kubernetes monitoring stack with:
 - Grafana for dashboards
 - Prometheus for metrics
 - Loki for logs
+- Tempo for distributed traces
 - Grafana Alloy for Kubernetes pod log collection
+  and OpenTelemetry trace forwarding
 
 All resources deploy into the `monitoring` namespace.
 
@@ -14,6 +16,7 @@ Pinned image versions:
 - Grafana: `grafana/grafana:13.0.1-security-01`
 - Prometheus: `prom/prometheus:v3.11.3`
 - Loki: `grafana/loki:3.7.1`
+- Tempo: `grafana/tempo:2.8.2`
 - Alloy: `grafana/alloy:v1.16.0`
 
 ## Repository Layout
@@ -86,12 +89,14 @@ Grafana is provisioned with:
 
 - Prometheus: `http://prometheus.monitoring.svc.cluster.local:9090`
 - Loki: `http://loki.monitoring.svc.cluster.local:3100`
+- Tempo: `http://tempo.monitoring.svc.cluster.local:3200`
 
 ## Access Prometheus and Loki Directly
 
 ```bash
 kubectl port-forward -n monitoring svc/prometheus 9090:9090
 kubectl port-forward -n monitoring svc/loki 3100:3100
+kubectl port-forward -n monitoring svc/tempo 3200:3200
 ```
 
 Prometheus:
@@ -104,6 +109,12 @@ Loki readiness:
 
 ```text
 http://localhost:3100/ready
+```
+
+Tempo readiness:
+
+```text
+http://localhost:3200/ready
 ```
 
 ## Scrape Application Metrics
@@ -150,6 +161,52 @@ In Grafana Explore, select the Loki datasource and try:
 {namespace="microservices"}
 ```
 
+## Traces With Tempo
+
+Tempo stores distributed traces. A trace follows one request as it moves between services.
+
+Example request path:
+
+```text
+frontend -> user-service -> order-service -> payment-service -> notification-service
+```
+
+The monitoring path is:
+
+```text
+OpenTelemetry SDK in app -> Alloy OTLP receiver -> Tempo -> Grafana Explore
+```
+
+Alloy exposes OTLP endpoints inside the cluster:
+
+```text
+http://alloy.monitoring.svc.cluster.local:4318/v1/traces
+alloy.monitoring.svc.cluster.local:4317
+```
+
+Use the HTTP endpoint for Node.js services configured with:
+
+```text
+OTEL_TRACES_EXPORTER=otlp
+OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://alloy.monitoring.svc.cluster.local:4318/v1/traces
+```
+
+In Grafana Explore, select the Tempo datasource. Traces appear after instrumented applications send requests.
+
+## What OpenTelemetry Does Here
+
+OpenTelemetry is the instrumentation standard used by applications to create telemetry.
+
+In this setup:
+
+- Prometheus metrics answer: "How many requests, errors, CPU, memory?"
+- Loki logs answer: "What did the container print?"
+- Tempo traces answer: "Where did this exact request spend time?"
+- Alloy receives telemetry and forwards it to the right backend.
+- Grafana connects the backends so you can inspect metrics, logs, and traces from one UI.
+
+The `microservices-deployment` services use OpenTelemetry Node.js auto-instrumentation. That instrumentation creates spans for inbound HTTP requests and sends them to Alloy over OTLP HTTP.
+
 ## Storage Notes
 
 This stack uses `emptyDir` volumes for Prometheus, Loki, Grafana, and Alloy data to keep local Minikube cleanup simple. Data is lost when pods are recreated.
@@ -159,6 +216,7 @@ For longer-lived data, replace `emptyDir` with `PersistentVolumeClaim` resources
 - Prometheus `/prometheus`
 - Loki `/loki`
 - Grafana `/var/lib/grafana`
+- Tempo `/tempo`
 
 ## Cleanup
 
