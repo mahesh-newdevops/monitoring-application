@@ -38,10 +38,11 @@ data:
       }
 
       rule {
-        source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_name", "__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
-        separator     = "_"
+        source_labels = ["__meta_kubernetes_pod_name", "__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
+        separator     = "/"
+        regex         = "([^/]+)/([^/]+)/([^/]+)"
         target_label  = "__path__"
-        replacement   = "/var/log/pods/$1_$2_$3/$4/*.log"
+        replacement   = "/var/log/containers/$1_$2_$3-*.log"
       }
     }
 
