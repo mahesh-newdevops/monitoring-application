@@ -35,7 +35,14 @@ k8s/      Kustomize Kubernetes manifests
 
 ## Configure Grafana Admin Password
 
-Create the Grafana admin secret before applying the stack:
+The GitOps manifests create the Grafana admin secret:
+
+```text
+username: admin
+password: admin123
+```
+
+For manual deploys, the equivalent command is:
 
 ```bash
 kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -

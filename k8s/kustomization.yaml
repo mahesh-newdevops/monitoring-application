@@ -12,6 +12,7 @@ resources:
   - tempo/configmap.yaml
   - tempo/deployment.yaml
   - tempo/service.yaml
+  - grafana/secret.yaml
   - grafana/datasources.yaml
   - grafana/deployment.yaml
   - grafana/service.yaml
