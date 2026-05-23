@@ -216,7 +216,7 @@ For longer-lived data, replace `emptyDir` with `PersistentVolumeClaim` resources
 - Prometheus `/prometheus`
 - Loki `/loki`
 - Grafana `/var/lib/grafana`
-- Tempo `/tempo`
+- Tempo `/var/tempo`
 
 ## Cleanup
 

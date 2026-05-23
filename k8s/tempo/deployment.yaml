@@ -29,7 +29,7 @@ spec:
             - name: config
               mountPath: /etc/tempo
             - name: data
-              mountPath: /tempo
+              mountPath: /var/tempo
           resources:
             requests:
               cpu: 100m

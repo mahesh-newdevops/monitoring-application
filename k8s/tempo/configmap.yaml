@@ -29,6 +29,6 @@ data:
       trace:
         backend: local
         wal:
-          path: /tempo/wal
+          path: /var/tempo/wal
         local:
-          path: /tempo/blocks
+          path: /var/tempo/blocks
