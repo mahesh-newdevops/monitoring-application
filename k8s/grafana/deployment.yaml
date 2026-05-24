@@ -30,9 +30,14 @@ spec:
                   optional: true
             - name: GF_AUTH_ANONYMOUS_ENABLED
               value: "false"
+          envFrom:
+            - secretRef:
+                name: grafana-smtp
           volumeMounts:
             - name: datasources
               mountPath: /etc/grafana/provisioning/datasources
+            - name: alerting
+              mountPath: /etc/grafana/provisioning/alerting
             - name: data
               mountPath: /var/lib/grafana
           resources:
@@ -46,5 +51,8 @@ spec:
         - name: datasources
           configMap:
             name: grafana-datasources
+        - name: alerting
+          configMap:
+            name: grafana-alerting
         - name: data
           emptyDir: {}

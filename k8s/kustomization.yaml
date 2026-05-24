@@ -12,8 +12,9 @@ resources:
   - tempo/configmap.yaml
   - tempo/deployment.yaml
   - tempo/service.yaml
-  - grafana/secret.yaml
+  - grafana/sealed-secret.yaml
   - grafana/datasources.yaml
+  - grafana/alerting.yaml
   - grafana/deployment.yaml
   - grafana/service.yaml
   - alloy/configmap.yaml

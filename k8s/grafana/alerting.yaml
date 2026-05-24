@@ -1,0 +1,300 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-alerting
+  namespace: monitoring
+data:
+  contact-points.yaml: |
+    apiVersion: 1
+    contactPoints:
+      - orgId: 1
+        name: email-alerts
+        receivers:
+          - uid: email_alerts
+            type: email
+            settings:
+              addresses: $ALERT_EMAIL_TO
+              singleEmail: false
+            disableResolveMessage: false
+
+  notification-policies.yaml: |
+    apiVersion: 1
+    policies:
+      - orgId: 1
+        receiver: email-alerts
+        group_by:
+          - grafana_folder
+          - alertname
+          - service
+        group_wait: 30s
+        group_interval: 5m
+        repeat_interval: 3h
+
+  alert-rules.yaml: |
+    apiVersion: 1
+    groups:
+      - orgId: 1
+        name: microservices-grafana-alerts
+        folder: Microservices
+        interval: 1m
+        rules:
+          - uid: microservice_down
+            title: MicroserviceDown
+            condition: C
+            data:
+              - refId: A
+                datasourceUid: prometheus
+                relativeTimeRange:
+                  from: 300
+                  to: 0
+                model:
+                  datasource:
+                    type: prometheus
+                    uid: prometheus
+                  editorMode: code
+                  expr: sum(up{namespace="microservices"} == 0)
+                  instant: true
+                  intervalMs: 1000
+                  legendFormat: down pods
+                  maxDataPoints: 43200
+                  range: false
+                  refId: A
+              - refId: B
+                datasourceUid: __expr__
+                relativeTimeRange:
+                  from: 300
+                  to: 0
+                model:
+                  conditions:
+                    - evaluator:
+                        params: []
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                          - B
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                  datasource:
+                    type: __expr__
+                    uid: __expr__
+                  expression: A
+                  intervalMs: 1000
+                  maxDataPoints: 43200
+                  reducer: last
+                  refId: B
+                  type: reduce
+              - refId: C
+                datasourceUid: __expr__
+                relativeTimeRange:
+                  from: 300
+                  to: 0
+                model:
+                  conditions:
+                    - evaluator:
+                        params:
+                          - 0
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                          - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                  datasource:
+                    type: __expr__
+                    uid: __expr__
+                  expression: B
+                  intervalMs: 1000
+                  maxDataPoints: 43200
+                  refId: C
+                  type: threshold
+            noDataState: OK
+            execErrState: Alerting
+            for: 1m
+            annotations:
+              summary: One or more microservice pods are not scrapeable
+              description: Grafana queried Prometheus and found at least one down microservice target.
+            labels:
+              severity: critical
+              source: grafana
+
+          - uid: microservice_5xx
+            title: MicroserviceHighErrorRate
+            condition: C
+            data:
+              - refId: A
+                datasourceUid: prometheus
+                relativeTimeRange:
+                  from: 300
+                  to: 0
+                model:
+                  datasource:
+                    type: prometheus
+                    uid: prometheus
+                  editorMode: code
+                  expr: sum(rate(http_requests_total{service=~".*-service",status_code=~"5.."}[5m]))
+                  instant: true
+                  intervalMs: 1000
+                  legendFormat: 5xx rate
+                  maxDataPoints: 43200
+                  range: false
+                  refId: A
+              - refId: B
+                datasourceUid: __expr__
+                relativeTimeRange:
+                  from: 300
+                  to: 0
+                model:
+                  conditions:
+                    - evaluator:
+                        params: []
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                          - B
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                  datasource:
+                    type: __expr__
+                    uid: __expr__
+                  expression: A
+                  intervalMs: 1000
+                  maxDataPoints: 43200
+                  reducer: last
+                  refId: B
+                  type: reduce
+              - refId: C
+                datasourceUid: __expr__
+                relativeTimeRange:
+                  from: 300
+                  to: 0
+                model:
+                  conditions:
+                    - evaluator:
+                        params:
+                          - 0.05
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                          - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                  datasource:
+                    type: __expr__
+                    uid: __expr__
+                  expression: B
+                  intervalMs: 1000
+                  maxDataPoints: 43200
+                  refId: C
+                  type: threshold
+            noDataState: OK
+            execErrState: Alerting
+            for: 2m
+            annotations:
+              summary: Microservices are returning elevated 5xx responses
+              description: Grafana detected more than 0.05 5xx responses per second across microservices.
+            labels:
+              severity: warning
+              source: grafana
+
+          - uid: microservice_no_traffic
+            title: MicroserviceNoTraffic
+            condition: C
+            data:
+              - refId: A
+                datasourceUid: prometheus
+                relativeTimeRange:
+                  from: 900
+                  to: 0
+                model:
+                  datasource:
+                    type: prometheus
+                    uid: prometheus
+                  editorMode: code
+                  expr: sum(rate(http_requests_total{service=~".*-service"}[10m]))
+                  instant: true
+                  intervalMs: 1000
+                  legendFormat: request rate
+                  maxDataPoints: 43200
+                  range: false
+                  refId: A
+              - refId: B
+                datasourceUid: __expr__
+                relativeTimeRange:
+                  from: 900
+                  to: 0
+                model:
+                  conditions:
+                    - evaluator:
+                        params: []
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                          - B
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                  datasource:
+                    type: __expr__
+                    uid: __expr__
+                  expression: A
+                  intervalMs: 1000
+                  maxDataPoints: 43200
+                  reducer: last
+                  refId: B
+                  type: reduce
+              - refId: C
+                datasourceUid: __expr__
+                relativeTimeRange:
+                  from: 900
+                  to: 0
+                model:
+                  conditions:
+                    - evaluator:
+                        params:
+                          - 0
+                        type: eq
+                      operator:
+                        type: and
+                      query:
+                        params:
+                          - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                  datasource:
+                    type: __expr__
+                    uid: __expr__
+                  expression: B
+                  intervalMs: 1000
+                  maxDataPoints: 43200
+                  refId: C
+                  type: threshold
+            noDataState: OK
+            execErrState: Alerting
+            for: 15m
+            annotations:
+              summary: Microservices have no recent traffic
+              description: Grafana detected no request traffic across microservices for 15 minutes.
+            labels:
+              severity: info
+              source: grafana

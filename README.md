@@ -1,5 +1,78 @@
 # monitoring-application
 
+Minikube monitoring stack for the demo platform:
+
+- Prometheus scrapes Kubernetes and microservice metrics.
+- Grafana reads Prometheus, Loki, and Tempo datasources.
+- Grafana evaluates alert rules and sends email notifications.
+- Loki stores logs.
+- Tempo stores traces.
+- Alloy collects logs/traces and forwards them to Loki/Tempo.
+
+## Grafana Email Alerts
+
+Update the Grafana SMTP secret before applying the monitoring kustomization:
+
+```yaml
+monitoring-application/k8s/grafana/secret.yaml
+```
+
+Replace these placeholder values:
+
+```text
+GF_SMTP_HOST
+GF_SMTP_USER
+GF_SMTP_PASSWORD
+GF_SMTP_FROM_ADDRESS
+ALERT_EMAIL_TO
+```
+
+For Gmail, use an app password for `GF_SMTP_PASSWORD`.
+
+Grafana alerting is provisioned from:
+
+```text
+monitoring-application/k8s/grafana/alerting.yaml
+```
+
+Provisioned Grafana resources:
+
+- Contact point: `email-alerts`
+- Notification policy: sends alerts to `email-alerts`
+- Alert folder: `Microservices`
+
+Current Grafana-managed alerts:
+
+- `MicroserviceDown`
+- `MicroserviceHighErrorRate`
+- `MicroserviceNoTraffic`
+
+To test a 5xx alert after the apps are deployed:
+
+```bash
+for i in $(seq 1 30); do curl -s http://microservices.local/orders/fail >/dev/null; done
+```
+
+To test a down alert:
+
+```bash
+kubectl scale deployment/order-service -n microservices --replicas=0
+```
+
+Scale it back after the alert fires:
+
+```bash
+kubectl scale deployment/order-service -n microservices --replicas=1
+```
+
+In Grafana, open:
+
+```text
+Alerts & IRM -> Alerting -> Alert rules
+```
+
+The provisioned rules appear under the `Microservices` folder. Provisioned rules are managed from Git, so edit `k8s/grafana/alerting.yaml` and restart Grafana to change them.
+
 Minikube-friendly Kubernetes monitoring stack with:
 
 - Grafana for dashboards
@@ -138,7 +211,7 @@ metadata:
 
 Add those annotations to any application pod that exposes Prometheus metrics.
 
-For the `microservices-deployment` repo, the current Express services only expose `/`, not `/metrics`. To collect useful application metrics, add a metrics endpoint with a library such as `prom-client`, then add the annotations to each service Deployment pod template.
+For the `microservices-deployment` repo, the Express services expose `/metrics` with `prom-client`, and the service Deployments already include these annotations.
 
 Example pod template annotation block:
 
