@@ -17,6 +17,11 @@ resources:
   - grafana/alerting.yaml
   - grafana/deployment.yaml
   - grafana/service.yaml
+  - kube-state-metrics/rbac.yaml
+  - kube-state-metrics/deployment.yaml
+  - kube-state-metrics/service.yaml
+  - node-exporter/daemonset.yaml
+  - node-exporter/service.yaml
   - alloy/configmap.yaml
   - alloy/daemonset.yaml
   - alloy/service.yaml

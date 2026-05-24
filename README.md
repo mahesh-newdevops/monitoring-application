@@ -5,6 +5,9 @@ Minikube monitoring stack for the demo platform:
 - Prometheus scrapes Kubernetes and microservice metrics.
 - Grafana reads Prometheus, Loki, and Tempo datasources.
 - Grafana evaluates alert rules and sends email notifications.
+- kube-state-metrics exposes Kubernetes object state metrics.
+- node-exporter exposes node CPU, memory, disk, and network metrics.
+- kubelet cAdvisor metrics expose container CPU, memory, and filesystem metrics.
 - Loki stores logs.
 - Tempo stores traces.
 - Alloy collects logs/traces and forwards them to Loki/Tempo.
@@ -91,6 +94,8 @@ Pinned image versions:
 - Loki: `grafana/loki:3.7.1`
 - Tempo: `grafana/tempo:2.8.2`
 - Alloy: `grafana/alloy:v1.16.0`
+- kube-state-metrics: `registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.15.0`
+- node-exporter: `quay.io/prometheus/node-exporter:v1.9.1`
 
 ## Repository Layout
 
@@ -224,6 +229,36 @@ template:
       prometheus.io/scrape: "true"
       prometheus.io/port: "3000"
       prometheus.io/path: "/metrics"
+```
+
+## Kubernetes Dashboards
+
+Imported Kubernetes dashboards usually need several metric families:
+
+- `kube_*` metrics from kube-state-metrics
+- `node_*` metrics from node-exporter
+- `container_*` metrics from kubelet cAdvisor
+- app metrics such as `http_requests_total`
+
+If a dashboard shows `N/A`, open a Grafana panel, inspect the PromQL query, and check whether that metric exists in Prometheus.
+
+Useful Prometheus checks:
+
+```promql
+up
+kube_pod_info
+kube_deployment_status_replicas
+node_cpu_seconds_total
+node_memory_MemAvailable_bytes
+container_cpu_usage_seconds_total
+http_requests_total
+```
+
+After changing Prometheus scrape config, reload/restart Prometheus:
+
+```bash
+kubectl rollout restart deployment/prometheus -n monitoring
+kubectl rollout status deployment/prometheus -n monitoring
 ```
 
 ## Logs
