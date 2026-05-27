@@ -298,3 +298,90 @@ data:
             labels:
               severity: info
               source: grafana
+
+          - uid: microservice_deployment_replicas_unavailable
+            title: MicroserviceDeploymentReplicasUnavailable
+            condition: C
+            data:
+              - refId: A
+                datasourceUid: prometheus
+                relativeTimeRange:
+                  from: 300
+                  to: 0
+                model:
+                  datasource:
+                    type: prometheus
+                    uid: prometheus
+                  editorMode: code
+                  expr: sum(kube_deployment_spec_replicas{namespace="microservices"} - kube_deployment_status_replicas_available{namespace="microservices"}) by (deployment)
+                  instant: true
+                  intervalMs: 1000
+                  legendFormat: unavailable replicas
+                  maxDataPoints: 43200
+                  range: false
+                  refId: A
+              - refId: B
+                datasourceUid: __expr__
+                relativeTimeRange:
+                  from: 300
+                  to: 0
+                model:
+                  conditions:
+                    - evaluator:
+                        params: []
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                          - B
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                  datasource:
+                    type: __expr__
+                    uid: __expr__
+                  expression: A
+                  intervalMs: 1000
+                  maxDataPoints: 43200
+                  reducer: last
+                  refId: B
+                  type: reduce
+              - refId: C
+                datasourceUid: __expr__
+                relativeTimeRange:
+                  from: 300
+                  to: 0
+                model:
+                  conditions:
+                    - evaluator:
+                        params:
+                          - 0
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                          - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                  datasource:
+                    type: __expr__
+                    uid: __expr__
+                  expression: B
+                  intervalMs: 1000
+                  maxDataPoints: 43200
+                  refId: C
+                  type: threshold
+            noDataState: OK
+            execErrState: Alerting
+            for: 1m
+            annotations:
+              summary: One or more microservice deployments have unavailable replicas
+              description: Grafana detected fewer available replicas than desired for a microservice deployment.
+            labels:
+              severity: critical
+              source: grafana

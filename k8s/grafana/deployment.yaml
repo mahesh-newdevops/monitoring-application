@@ -38,6 +38,10 @@ spec:
               mountPath: /etc/grafana/provisioning/datasources
             - name: alerting
               mountPath: /etc/grafana/provisioning/alerting
+            - name: dashboard-providers
+              mountPath: /etc/grafana/provisioning/dashboards
+            - name: kubernetes-dashboards
+              mountPath: /var/lib/grafana/dashboards/kubernetes
             - name: data
               mountPath: /var/lib/grafana
           resources:
@@ -54,5 +58,11 @@ spec:
         - name: alerting
           configMap:
             name: grafana-alerting
+        - name: dashboard-providers
+          configMap:
+            name: grafana-dashboard-providers
+        - name: kubernetes-dashboards
+          configMap:
+            name: grafana-kubernetes-platform-dashboard
         - name: data
           emptyDir: {}

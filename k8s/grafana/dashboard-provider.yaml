@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-providers
+  namespace: monitoring
+data:
+  providers.yaml: |
+    apiVersion: 1
+    providers:
+      - name: Kubernetes Platform
+        orgId: 1
+        folder: Kubernetes
+        type: file
+        disableDeletion: false
+        editable: true
+        updateIntervalSeconds: 30
+        options:
+          path: /var/lib/grafana/dashboards/kubernetes
