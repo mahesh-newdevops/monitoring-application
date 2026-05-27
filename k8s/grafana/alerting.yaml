@@ -299,7 +299,7 @@ data:
               severity: info
               source: grafana
 
-          - uid: microservice_deployment_replicas_unavailable
+          - uid: ms_replicas_unavailable
             title: MicroserviceDeploymentReplicasUnavailable
             condition: C
             data:
