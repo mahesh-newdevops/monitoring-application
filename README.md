@@ -100,7 +100,6 @@ Pinned image versions:
 ## Repository Layout
 
 ```text
-argocd/   Argo CD Application manifest
 k8s/      Kustomize Kubernetes manifests
 ```
 
@@ -109,7 +108,8 @@ k8s/      Kustomize Kubernetes manifests
 - Minikube is running.
 - `kubectl` is pointed at the Minikube cluster.
 - Internet access is available from Minikube nodes to pull public images.
-- For Argo CD deployment, Argo CD is already installed in the `argocd` namespace.
+- For GitOps deployment, the Argo CD `Application` is managed from the
+  `gitops-platform-minikube` repository.
 
 ## Configure Grafana Admin Password
 
@@ -142,13 +142,14 @@ kubectl rollout status deployment/grafana -n monitoring
 kubectl rollout status daemonset/alloy -n monitoring
 ```
 
-## Deploy With Argo CD
+## Deploy With GitOps
 
-```bash
-kubectl apply -f argocd/monitoring-application.yaml
-```
+Argo CD deployment configuration is owned by the `gitops-platform-minikube`
+repository. That repo defines the Argo CD `Application` which syncs the `k8s/`
+kustomization from this repository into the `monitoring` namespace.
 
-Argo CD syncs the `k8s/` kustomization from this repository.
+Keep this repository focused on monitoring manifests. Do not add Argo CD
+`Application` or `AppProject` manifests here.
 
 ## Access Grafana
 
@@ -337,6 +338,5 @@ For longer-lived data, replace `emptyDir` with `PersistentVolumeClaim` resources
 
 ```bash
 kubectl delete -k k8s --ignore-not-found
-kubectl delete application monitoring-application -n argocd --ignore-not-found
 kubectl delete namespace monitoring --ignore-not-found
 ```
